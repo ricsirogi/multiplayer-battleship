@@ -1,2 +1,3 @@
 # multiplayer-battleship
-Multiplayer battleship collaboration with @SkaLiXuR
+
+Multiplayer battleship collaboration with [@SkaLiXuR](https://github.com/SkaLiXuR)
