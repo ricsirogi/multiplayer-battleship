@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Grid(object):
-    def __init__(self, pos: tuple[int, int], row_column: list[int], cell_size: list[int], cell_color: list[int], border_color: list[int], border_size: int, screen):
+    def __init__(self, pos: tuple[int, int], row_column: list[int], cell_size: list[int], cell_color: list[int], border_color: list[int], border_size: int, screen: pygame.Surface):
         self.row_column = row_column
         self.cell_size = cell_size
         self.cell_color = cell_color
@@ -18,6 +18,7 @@ class Grid(object):
         self.ships = {}
         self.locked_ships = {}
         self.returned_value = None
+        self.was_clicked = False
 
         border_width = self.cell_size[0] * self.row_column[1] + \
             (self.row_column[1] + 1) * self.border_size
@@ -43,7 +44,11 @@ class Grid(object):
                     (pos_x, pos_y), self.cell_size))
 
     def get_mouse(self, ship=None):
-        if self.border.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+        clicked = pygame.mouse.get_pressed()
+        if not clicked[0] and not clicked[2]:
+            self.was_clicked = False
+        if self.border.collidepoint(pygame.mouse.get_pos()) and (clicked[0] or clicked[2]) and not self.was_clicked:
+            self.was_clicked = True
             self.click(self.ships[str(ship)])
             self.returned_value = True
 
@@ -52,7 +57,7 @@ class Grid(object):
             self.ships[str(c)] = i
 
     def click(self, ship):
-        mouse_pos = pygame.mouse.get_pos()
+        pos = [ship.x, ship.y]
 
         closest_candidates = []
         coords_list = []
@@ -60,7 +65,7 @@ class Grid(object):
         for x in self.x_positions:
             for y in self.y_positions:
                 closest_candidates.append(
-                    math.sqrt(abs((mouse_pos[0] - x) ** 2) + abs(mouse_pos[1] - y) ** 2))  # this is distance between mouse position and currently selected coord)
+                    math.sqrt(abs((pos[0] - x) ** 2) + abs(pos[1] - y) ** 2))  # this is distance between mouse position and currently selected coord)
                 coords_list.append([x, y])
 
         temp = np.array(closest_candidates)
@@ -68,14 +73,16 @@ class Grid(object):
         temp = np.where(temp == closest_candidates[0])[0]
         closest_index = temp[0]
 
-        ship.set_follow(False)
+        print("trying to lock ship", coords_list[closest_index])
         successful_lock = ship.lock_in_grid(
             coords_list[closest_index])  # THIS is the coordinates of the coordinate that is closest to the mouse
         if successful_lock:
+            print("lock successful")
             self.locked_ships[str(ship.ship_number)] = ship
             self.returned_value = True
         else:
-            self.returned_value = False
+            print("lock unsuccessful")
+            self.returned_value = None
 
     def placed_ship(self):
         if self.returned_value:
