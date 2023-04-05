@@ -1,0 +1,10 @@
+Server side:
+
+Client side:
+Main menu (a place where I can join to an IP that I type in)
+display for enemy player's board (and also a way, to send a shoot, when I click a cell)
+score, and keeping track of whose turn it is
+winning, losing
+
+Client side dreamland todo:
+preview for where the ship'll be placed when hovering over grid with ship in hand
