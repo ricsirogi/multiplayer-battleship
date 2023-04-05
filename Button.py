@@ -2,9 +2,7 @@ import pygame
 
 
 class Button(object):
-    global grid, grid_exists
-
-    def __init__(self, text: str, pos: tuple[int, int], size: tuple[int, int], a_color: list[int], ia_color: list[int], text_color: list[int], command, screen, screen_size, exit_button_margin=None):
+    def __init__(self, text: str, pos: tuple[int, int], size: tuple[int, int], a_color: list[int], ia_color: list[int], text_color: list[int], command, screen: pygame.Surface, screen_size: list[int], exit_button_margin=None):
         self.text = text
         self.size = size
         self.a_color = a_color

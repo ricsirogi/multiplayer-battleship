@@ -1,9 +1,10 @@
 import pygame
 import math
+import numpy as np
 
 
 class Grid(object):
-    def __init__(self, pos: tuple[int, int], row_column: list[int], cell_size: list[int], cell_color: list[int], border_color: list[int], border_size: int, screen, square):
+    def __init__(self, pos: tuple[int, int], row_column: list[int], cell_size: list[int], cell_color: list[int], border_color: list[int], border_size: int, screen):
         self.row_column = row_column
         self.cell_size = cell_size
         self.cell_color = cell_color
@@ -14,7 +15,9 @@ class Grid(object):
         self.y_positions = []
         self.cells = []
         self.screen = screen
-        self.square = square
+        self.ships = {}
+        self.locked_ships = {}
+        self.returned_value = None
 
         border_width = self.cell_size[0] * self.row_column[1] + \
             (self.row_column[1] + 1) * self.border_size
@@ -28,49 +31,28 @@ class Grid(object):
             self.cells.append([])
             pos_y = self.pos[1] + self.cell_size[1] * i + \
                 self.border_size * i + self.border_size
-            self.y_positions.append(pos_y)
+            if pos_y not in self.y_positions:
+                self.y_positions.append(pos_y)
+
             for j in range(self.row_column[1]):
                 pos_x = self.pos[0] + self.cell_size[0] * j + \
                     self.border_size * j + self.border_size
-                self.x_positions.append(pos_x)
+                if pos_x not in self.x_positions:
+                    self.x_positions.append(pos_x)
                 self.cells[i].append(pygame.Rect(
                     (pos_x, pos_y), self.cell_size))
 
-    def get_mouse(self):
+    def get_mouse(self, ship=None):
+        if self.border.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
+            self.click(self.ships[str(ship)])
+            self.returned_value = True
+
+    def get_ships(self, ships: list):
+        for c, i in enumerate(ships):
+            self.ships[str(c)] = i
+
+    def click(self, ship):
         mouse_pos = pygame.mouse.get_pos()
-        self.mouse_is_on = self.border.collidepoint(mouse_pos)
-        if self.mouse_is_on and pygame.mouse.get_pressed()[0]:
-            self.click()
-        elif self.mouse_is_on and pygame.mouse.get_pressed()[2]:
-            print("This is as debug")
-
-    def click(self):
-        """
-
-        closest = []
-        coords_list = []
-
-        for x in x_positions:
-            for y in y_positions:
-                closest.append(
-                    math.sqrt( (mouse_pos[0] - x))^2 + ((mouse_pos[1] - (y))^2 # this is distance between mouse position and currently selected coord
-                    )
-                    coords_list.append([x, y])
-
-        coords_list[indexOf(closest.min())] # THIS is the coordinates of the coordinate that is closest to the mouse
-        """
-
-        mouse_pos = pygame.mouse.get_pos()
-        """self.closest_x = -1
-        self.closest_y = -1
-
-        for y in self.y_positions:
-            if abs(self.closest_y - y) < abs(mouse_pos[1] - self.closest_y):
-                self.closest_y = y
-
-        for x in self.x_positions:
-            if abs(self.closest_x - x) < abs(mouse_pos[0] - self.closest_x):
-                self.closest_x = x"""
 
         closest_candidates = []
         coords_list = []
@@ -78,15 +60,29 @@ class Grid(object):
         for x in self.x_positions:
             for y in self.y_positions:
                 closest_candidates.append(
-                    math.sqrt((mouse_pos[0] - x) ** 2 + (mouse_pos[1] - y) ** 2))  # this is distance between mouse position and currently selected coord)
+                    math.sqrt(abs((mouse_pos[0] - x) ** 2) + abs(mouse_pos[1] - y) ** 2))  # this is distance between mouse position and currently selected coord)
                 coords_list.append([x, y])
 
-        temp = closest_candidates
+        temp = np.array(closest_candidates)
         closest_candidates.sort()
+        temp = np.where(temp == closest_candidates[0])[0]
+        closest_index = temp[0]
 
-        self.square.set_follow(False)
-        self.square.lock_in_grid(
-            print(coords_list[temp.index(closest_candidates[0])]))  # THIS is the coordinates of the coordinate that is closest to the mouse
+        ship.set_follow(False)
+        successful_lock = ship.lock_in_grid(
+            coords_list[closest_index])  # THIS is the coordinates of the coordinate that is closest to the mouse
+        if successful_lock:
+            self.locked_ships[str(ship.ship_number)] = ship
+            self.returned_value = True
+        else:
+            self.returned_value = False
+
+    def placed_ship(self):
+        if self.returned_value:
+            self.returned_value = None
+            return True
+        else:
+            return False
 
     def draw(self):
         pygame.draw.rect(self.screen, self.border_color, self.border)
@@ -95,4 +91,6 @@ class Grid(object):
                 pygame.draw.rect(self.screen, self.cell_color, j)
 
     def __del__(self):
-        self.square.set_follow(True)
+        for i in self.ships.values():
+            if i is not None:
+                i.set_follow(True)
