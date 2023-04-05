@@ -13,7 +13,7 @@ class Sprite(object):
         self.was_rotated = False
         self.was_clicked = False
         self.was_reset = False
-        self.rotation = 0
+        self.rotation = 0  # even numbers are horizontal, odd numbers are vertical
         self.locked = False
         self.ship_number = ship_number
         self.rotate(90)
@@ -45,7 +45,7 @@ class Sprite(object):
                     return
 
                 if self.locked:
-                    self.grid.locked_ships[str(self.ship_number)] = None
+                    self.grid.locked_ships.pop(str(self.ship_number))
                 self.follow = True
                 self.locked = False
                 print("picked up!")
@@ -80,6 +80,9 @@ class Sprite(object):
 
     def return_value(self):
         return self.returned_value
+
+    def die(self):
+        print("death")
 
     def draw(self, screen: pygame.Surface):
         screen.blit(self.image, (self.x, self.y))
